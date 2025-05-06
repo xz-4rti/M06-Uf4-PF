@@ -63,7 +63,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
     } catch (error) {
         // If a database error occurs, return a more specific error.
         return {
-            message: 'Database Error: Failed to Create Invoice.',
+            message: 'Database Error: Failed to Create Invoice.' + error,
         };
     }
 
@@ -102,7 +102,7 @@ export async function updateInvoice(
         WHERE id = ${id}
       `;
     } catch (error) {
-        return { message: 'Database Error: Failed to Update Invoice.' };
+        return { message: 'Database Error: Failed to Update Invoice.' + error };
     }
 
     revalidatePath('/dashboard/invoices');
@@ -124,11 +124,13 @@ export async function authenticate(
         await signIn('credentials', formData);
     } catch (error) {
         if (error instanceof AuthError) {
-            switch (error.type) {
+            const authError = error as AuthError & { type?: string };
+
+            switch (authError.type) {
                 case 'CredentialsSignin':
                     return 'Invalid credentials.';
                 default:
-                    return 'Something went wrong.';
+                    return 'Something went wrong.' + authError.message;
             }
         }
         throw error;
